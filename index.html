@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Projetos FrontEnd</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .card-placeholder {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.2em;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            color: #333;
+            text-transform: capitalize;
+            font-weight: 600;
+        }
+
+        .card-description {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .card-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+            text-align: center;
+        }
+
+        .card-link:hover {
+            opacity: 0.9;
+        }
+
+        .no-projects {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Projetos FrontEnd</h1>
+            <p>Reproduza os projetos de acordo com sua complexidade</p>
+        </header>
+
+        <div class="projects-grid" id="projectsGrid">
+            <!-- Cards serão gerados aqui via JavaScript -->
+        </div>
+
+        <div id="noProjects" class="no-projects" style="display: none;">
+            <p>Nenhum projeto encontrado. Adicione pastas com um arquivo <code>imagem_projeto.png</code> ou um arquivo <code>index.html</code></p>
+        </div>
+    </div>
+
+    <script>
+        // Função para extrair o número do nome da pasta
+        // Ex: "1 - Flamengo" -> 1, "00 - Padaria" -> 0
+        function extractFolderNumber(folderName) {
+            const match = folderName.match(/^(\d+)\s*[-–]\s*/);
+            return match ? parseInt(match[1], 10) : Infinity;
+        }
+
+        // Função para extrair o nome do projeto removendo o número
+        // Ex: "1 - Flamengo" -> "Flamengo"
+        // Ex: "Flamengo" -> "Flamengo" (sem número)
+        function extractProjectName(folderName) {
+            // Primeiro tenta remover número e hífen
+            let name = folderName.replace(/^\d+\s*[-–]\s*/, '').trim();
+            // Se não tinha número, usa o nome da pasta como está
+            if (name === folderName) {
+                return name.charAt(0).toUpperCase() + name.slice(1);
+            }
+            return name;
+        }
+
+        // Função para gerar descrição automática
+        function generateDescription(projectName) {
+            return `Projeto: ${projectName}`;
+        }
+
+        // Função para obter os projetos dinamicamente
+        async function getProjects() {
+            // Lista de pastas conhecidas que devem ser processadas
+            const folderNames = [
+                'padaria',
+                'rexpa',
+                'tuna_luso',
+                'flamengo'
+            ];
+
+            const projects = folderNames.map(folder => ({
+                folder: folder,
+                number: extractFolderNumber(folder),
+                name: extractProjectName(folder),
+                description: generateDescription(extractProjectName(folder))
+            }));
+
+            // Ordenar projetos pelo número da pasta
+            return projects.sort((a, b) => a.number - b.number);
+        }
+
+        // Função para carregar as imagens e criar os cards
+        async function createProjectCards() {
+            const gridContainer = document.getElementById('projectsGrid');
+            const noProjectsMessage = document.getElementById('noProjects');
+
+            const projects = await getProjects();
+
+            if (projects.length === 0) {
+                noProjectsMessage.style.display = 'block';
+                return;
+            }
+
+            projects.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                // Caminho da imagem do projeto
+                const imagePath = `${project.folder}/imagem_projeto.png`;
+                
+                // Criar a imagem
+                const img = document.createElement('img');
+                img.className = 'card-image';
+                img.src = imagePath;
+                img.alt = project.name;
+                img.onerror = function() {
+                    // Placeholder caso a imagem não carregue
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'card-placeholder';
+                    placeholder.textContent = `📁 ${project.name}`;
+                    card.replaceChild(placeholder, img);
+                };
+
+                // Conteúdo do card
+                const content = document.createElement('div');
+                content.className = 'card-content';
+                
+                const title = document.createElement('h3');
+                title.className = 'card-title';
+                title.textContent = project.name;
+                
+                const description = document.createElement('p');
+                description.className = 'card-description';
+                description.textContent = project.description;
+                
+                const link = document.createElement('a');
+                link.className = 'card-link';
+                link.href = `${project.folder}/`;
+                link.textContent = 'Acessar Projeto →';
+                
+                content.appendChild(title);
+                content.appendChild(description);
+                content.appendChild(link);
+
+                card.appendChild(img);
+                card.appendChild(content);
+                gridContainer.appendChild(card);
+            });
+        }
+
+        // Criar os cards quando a página carregar
+        document.addEventListener('DOMContentLoaded', createProjectCards);
+    </script>
+</body>
+</html>
