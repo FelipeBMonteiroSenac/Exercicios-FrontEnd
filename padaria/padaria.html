@@ -4,22 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Padaria Pao de Ouro - Cardapio</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- Cabecalho Principal -->
-    <header>
+    <header id="topo">
         <h1>Padaria Pao de Ouro</h1>
         <p><em>O verdadeiro sabor do pao artesanal, quentinho a toda hora!</em></p>
         <hr>
         <!-- Navegacao Interna (Ancoras) -->
-        <nav>
+        <nav class="menu">
             <p><strong>Ir para a secao:</strong></p>
             <ul>
-                <li><a href="#paes">Paes e Salgados</a></li>
-                <li><a href="#doces">Doces e Confeitaria</a></li>
-                <li><a href="#bebidas">Bebidas e Combos</a></li>
-                <li><a href="#contato">Horario e Contato</a></li>
+                <li class="menu-item"><a href="#paes">Paes e Salgados</a></li>
+                <li class="menu-item"><a href="#doces">Doces e Confeitaria</a></li>
+                <li class="menu-item"><a href="#bebidas">Bebidas e Combos</a></li>
+                <li class="menu-item"><a href="#contato">Horario e Contato</a></li>
             </ul>
         </nav>
     </header>
@@ -29,7 +30,7 @@
     <main>
 
         <!-- Secao: Paes e Salgados -->
-        <section id="paes">
+        <section class="card" id="paes">
             <h2>Paes e Salgados</h2>
             <p>Produtos saidos do forno de hora em hora.</p>
             
@@ -51,7 +52,7 @@
         <br>
 
         <!-- Secao: Doces e Confeitaria -->
-        <section id="doces">
+        <section class="card" id="doces">
             <h2>Doces e Confeitaria</h2>
             <p>Para adocar o seu dia com receitas tradicionais.</p>
             
@@ -65,7 +66,7 @@
         <br>
 
         <!-- Secao: Bebidas e Combos (Tabela) -->
-        <section id="bebidas">
+        <section class="card" id="bebidas">
             <h2>Bebidas e Combos Matinais</h2>
             <p>Veja nossa tabela de precos para bebidas e os combos promocionais:</p>
 
