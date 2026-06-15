@@ -40,6 +40,50 @@
             opacity: 0.9;
         }
 
+        .projects-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .filter-button {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            font-weight: 600;
+            min-width: 110px;
+            text-align: center;
+        }
+
+        .filter-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .filter-button.active {
+            background: white;
+            color: #3f3d56;
+            border-color: white;
+        }
+
+        .project-tag {
+            display: inline-block;
+            margin-right: 8px;
+            margin-top: 10px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.8em;
+            background: #f0f4ff;
+            color: #363f72;
+            font-weight: 600;
+        }
+
         .projects-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -145,10 +189,16 @@
         <header>
             <h1>Projetos FrontEnd</h1>
             <p>Reproduza os projetos de acordo com sua complexidade</p>
+            <br>
+            <br>
+            <div class="projects-intro">
+                <p>A seguir você terá alguns projetos para reproduzir, selecione um dos cards e reproduza os projetos com html, html com css ou html com css e javascript.</p>
+            </div>
         </header>
 
-        <div class="projects-intro">
-            <p>A seguir você terá alguns projetos para reproduzir, selecione um dos cards e reproduza os projetos com html, html com css ou html com css e javascript.</p>
+
+        <div class="projects-filter" id="projectsFilter">
+            <!-- Filtros serão gerados aqui via JavaScript -->
         </div>
 
         <div class="projects-grid" id="projectsGrid">
@@ -161,24 +211,22 @@
     </div>
 
     <script>
+        const projectFilters = ['All', 'HTML', 'HTML + CSS'];
+        let selectedFilter = 'All';
+
         // Função para extrair o número do nome da pasta
-        // Ex: "1 - Flamengo" -> 1, "00 - Padaria" -> 0
+        // Ex: "1 - Flamengo" -> 1, "00 Padaria" -> 0
         function extractFolderNumber(folderName) {
-            const match = folderName.match(/^(\d+)\s*[-–]\s*/);
+            const match = folderName.match(/^(\d+)\s*(?:[-–]\s*)?/);
             return match ? parseInt(match[1], 10) : Infinity;
         }
 
         // Função para extrair o nome do projeto removendo o número
         // Ex: "1 - Flamengo" -> "Flamengo"
-        // Ex: "Flamengo" -> "Flamengo" (sem número)
+        // Ex: "00 padaria" -> "padaria"
         function extractProjectName(folderName) {
-            // Primeiro tenta remover número e hífen
-            let name = folderName.replace(/^\d+\s*[-–]\s*/, '').trim();
-            // Se não tinha número, usa o nome da pasta como está
-            if (name === folderName) {
-                return name.charAt(0).toUpperCase() + name.slice(1);
-            }
-            return name;
+            const name = folderName.replace(/^\d+\s*(?:[-–]\s*)?/, '').trim();
+            return name.charAt(0).toUpperCase() + name.slice(1);
         }
 
         // Função para gerar descrição automática
@@ -186,78 +234,122 @@
             return `Projeto: ${projectName}`;
         }
 
-        // Função para obter os projetos dinamicamente
+        // Obter os projetos com tags e nomes reais
         async function getProjects() {
-            // Lista de pastas conhecidas que devem ser processadas
-            const folderNames = [
-                'padaria',
-                'rexpa',
-                'tuna_luso',
-                'flamengo'
-            ];
-
-            const projects = folderNames.map(folder => ({
-                folder: folder,
-                number: extractFolderNumber(folder),
-                name: extractProjectName(folder),
-                description: generateDescription(extractProjectName(folder))
+            const projects = [
+                {
+                    folder: '00 padaria',
+                    tags: ['HTML + CSS']
+                },
+                {
+                    folder: '01 rexpa',
+                    tags: ['HTML']
+                },
+                {
+                    folder: '02 tuna_luso',
+                    tags: ['HTML + CSS']
+                },
+                {
+                    folder: '03 flamengo',
+                    tags: ['HTML + CSS']
+                }
+            ].map(project => ({
+                ...project,
+                number: extractFolderNumber(project.folder),
+                name: extractProjectName(project.folder),
+                description: generateDescription(extractProjectName(project.folder))
             }));
 
-            // Ordenar projetos pelo número da pasta
             return projects.sort((a, b) => a.number - b.number);
         }
 
-        // Função para carregar as imagens e criar os cards
+        function createFilterButtons() {
+            const filterContainer = document.getElementById('projectsFilter');
+            filterContainer.innerHTML = '';
+
+            projectFilters.forEach(filterName => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'filter-button';
+                button.textContent = filterName;
+                if (filterName === selectedFilter) {
+                    button.classList.add('active');
+                }
+                button.addEventListener('click', () => {
+                    selectedFilter = filterName;
+                    document.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    createProjectCards();
+                });
+                filterContainer.appendChild(button);
+            });
+        }
+
+        function filterProjects(projects) {
+            if (selectedFilter === 'All') {
+                return projects;
+            }
+            return projects.filter(project => project.tags.includes(selectedFilter));
+        }
+
         async function createProjectCards() {
             const gridContainer = document.getElementById('projectsGrid');
             const noProjectsMessage = document.getElementById('noProjects');
 
             const projects = await getProjects();
+            const filteredProjects = filterProjects(projects);
 
-            if (projects.length === 0) {
+            gridContainer.innerHTML = '';
+            noProjectsMessage.style.display = 'none';
+
+            if (filteredProjects.length === 0) {
                 noProjectsMessage.style.display = 'block';
                 return;
             }
 
-            projects.forEach(project => {
+            filteredProjects.forEach(project => {
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // Caminho da imagem do projeto
                 const imagePath = `${project.folder}/imagem_projeto.png`;
-                
-                // Criar a imagem
                 const img = document.createElement('img');
                 img.className = 'card-image';
                 img.src = imagePath;
                 img.alt = project.name;
                 img.onerror = function() {
-                    // Placeholder caso a imagem não carregue
                     const placeholder = document.createElement('div');
                     placeholder.className = 'card-placeholder';
                     placeholder.textContent = `📁 ${project.name}`;
                     card.replaceChild(placeholder, img);
                 };
 
-                // Conteúdo do card
                 const content = document.createElement('div');
                 content.className = 'card-content';
-                
+
                 const title = document.createElement('h3');
                 title.className = 'card-title';
                 title.textContent = project.name;
-                
+
                 const description = document.createElement('p');
                 description.className = 'card-description';
                 description.textContent = project.description;
-                
+
+                const tagsContainer = document.createElement('div');
+                project.tags.forEach(tag => {
+                    const tagLabel = document.createElement('span');
+                    tagLabel.className = 'project-tag';
+                    tagLabel.textContent = tag;
+                    tagsContainer.appendChild(tagLabel);
+                });
+
                 const link = document.createElement('a');
                 link.className = 'card-link';
                 link.href = `${project.folder}/`;
                 link.textContent = 'Acessar Projeto →';
-                
+
                 content.appendChild(title);
                 content.appendChild(description);
+                content.appendChild(tagsContainer);
                 content.appendChild(link);
 
                 card.appendChild(img);
@@ -266,8 +358,10 @@
             });
         }
 
-        // Criar os cards quando a página carregar
-        document.addEventListener('DOMContentLoaded', createProjectCards);
+        document.addEventListener('DOMContentLoaded', () => {
+            createFilterButtons();
+            createProjectCards();
+        });
     </script>
 </body>
 </html>
